@@ -1,6 +1,7 @@
 const SHA256 = require("crypto-js/sha256");
+const chalk = require("chalk");
 
-const DIFF = 3;
+const DIFF = 4;
 
 class Block {
   constructor(timestamp, txns, previousHash) {
@@ -29,7 +30,10 @@ class Block {
       this.hash = this.calculateHash();
     }
     console.log(
-      `Successfully hashed block with ${count} NONCE. HASH: ${this.hash}`
+      `Successfully hashed block with ` +
+        chalk.dim(count) +
+        ` NONCE. \nHASH: ` +
+        chalk.green(this.hash)
     );
   }
 }
@@ -43,9 +47,14 @@ class BlockChain {
     this.registeredAddresses = [
       "wallet-James",
       "wallet-Nora",
+      "wallet-George",
+      "wallet-Peter",
+      "wallet-Scarlet",
+      "wallet-Kate",
+      "wallet-Steve",
       "wallet-Miner69er",
-      "wallet-Miner70er",
     ];
+    this.whoPay = {};
     this.createGenesisBlock();
     this.airdropCoins(10000);
   }
@@ -85,12 +94,17 @@ class BlockChain {
     );
     block.mineBlock(this.difficulty);
 
-    console.log("Current Block successfully mined...");
+    console.log(chalk.yellow("Current Block successfully mined..."));
     this.chain.push(block);
 
     //Reset Unmined Transactions + reward the miner
     this.unminedTxns = [
-      new Transaction(Date.now(), "mint", minerAddress, this.miningReward),
+      new Transaction(
+        Date.now(),
+        "mint",
+        minerAddress,
+        randomNum(1, this.miningReward)
+      ),
     ];
   }
 
@@ -140,6 +154,26 @@ class BlockChain {
     // All is good
     return true;
   }
+
+  randomPayment() {
+    let payer = randomNum(0, this.registeredAddresses.length - 1);
+    let payee = randomNum(0, this.registeredAddresses.length - 1);
+    if (payee === payer) {
+      while (payee === payer) {
+        payee = randomNum(0, this.registeredAddresses.length - 1);
+      }
+    }
+    this.whoPay.payer = this.registeredAddresses[payer];
+    this.whoPay.payee = this.registeredAddresses[payee];
+    // console.log(this.whoPay.payer);
+    // console.log(this.whoPay.payee);
+  }
+  getPayer() {
+    return this.whoPay.payer;
+  }
+  getPayee() {
+    return this.whoPay.payee;
+  }
 }
 
 class Transaction {
@@ -151,49 +185,147 @@ class Transaction {
   }
 }
 
-let demoCoin = new BlockChain();
-// 1st Block
-demoCoin.createTransaction(
-  new Transaction(Date.now(), "wallet-James", "wallet-Nora", 50000)
-);
-demoCoin.createTransaction(
-  new Transaction(Date.now(), "wallet-Nora", "wallet-James", 2500)
-);
-console.log("\nThe block is mining...");
-demoCoin.mineCurrentBlock("wallet-Miner69er");
+function randomNum(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
 
-console.log("\nBalance: James: " + demoCoin.getAddressBalance("wallet-James"));
-console.log("\nBalance: Nora: " + demoCoin.getAddressBalance("wallet-Nora"));
-console.log(
-  "\nBalance: Miner69er: " + demoCoin.getAddressBalance("wallet-Miner69er")
-);
-console.log(
-  "Unmined Transactions: " +
-    demoCoin.unminedTxns[0].amount +
-    " of " +
-    demoCoin.unminedTxns[0].payeeAddress
-);
-// 2nd Block
-demoCoin.createTransaction(
+function showStatements() {
+  for (const wallet of jamesCoin.registeredAddresses) {
+    console.log(
+      chalk.blue(
+        `\nBalance: ` +
+          chalk.red.italic(wallet) +
+          `: ` +
+          chalk.green.bold(jamesCoin.getAddressBalance(wallet))
+      ) + chalk.yellow(" JAMESCOIN💰")
+    );
+  }
+  // console.log("\nBalance: James: " + jamesCoin.getAddressBalance("wallet-James"));
+}
+
+// function randomPayment(accounts) {
+//   let payer = randomNum(0, accounts.length - 2);
+//   let payee = randomNum(0, accounts.length - 2);
+//   if (payer === payee) {
+//     while (payer === payee) {
+//       payer = randomNum(0, accounts.length - 2);
+//     }
+//   }
+
+//   return { payer: accounts[payer], payee: accounts[payee] };
+// }
+
+let jamesCoin = new BlockChain();
+// 1st Block
+jamesCoin.createTransaction(
   new Transaction(Date.now(), "wallet-James", "wallet-Nora", 5000)
 );
-demoCoin.createTransaction(
+jamesCoin.createTransaction(
   new Transaction(Date.now(), "wallet-Nora", "wallet-James", 2500)
 );
 console.log("\nThe block is mining...");
-demoCoin.mineCurrentBlock("wallet-Miner70er");
+jamesCoin.mineCurrentBlock("wallet-Miner69er");
 
-console.log("\nBalance: James: " + demoCoin.getAddressBalance("wallet-James"));
-console.log("\nBalance: Nora: " + demoCoin.getAddressBalance("wallet-Nora"));
+console.log("\nBalance: James: " + jamesCoin.getAddressBalance("wallet-James"));
+console.log("\nBalance: Nora: " + jamesCoin.getAddressBalance("wallet-Nora"));
 console.log(
-  "\nBalance: Miner69er: " + demoCoin.getAddressBalance("wallet-Miner69er")
+  "\nBalance: Miner69er: " + jamesCoin.getAddressBalance("wallet-Miner69er")
 );
 console.log(
   "Unmined Transactions: " +
-    demoCoin.unminedTxns[0].amount +
+    jamesCoin.unminedTxns[0].amount +
     " of " +
-    demoCoin.unminedTxns[0].payeeAddress
+    jamesCoin.unminedTxns[0].payeeAddress
 );
+// 2nd Block
+jamesCoin.createTransaction(
+  new Transaction(Date.now(), "wallet-James", "wallet-Nora", 5000)
+);
+jamesCoin.createTransaction(
+  new Transaction(Date.now(), "wallet-Nora", "wallet-James", 2500)
+);
+console.log("\nThe block is mining...");
+jamesCoin.mineCurrentBlock("wallet-Miner70er");
+
+console.log("\nBalance: James: " + jamesCoin.getAddressBalance("wallet-James"));
+console.log("\nBalance: Nora: " + jamesCoin.getAddressBalance("wallet-Nora"));
+console.log(
+  "\nBalance: Miner69er: " + jamesCoin.getAddressBalance("wallet-Miner69er")
+);
+console.log(
+  "Unmined Transactions: " +
+    jamesCoin.unminedTxns[0].amount +
+    " of " +
+    jamesCoin.unminedTxns[0].payeeAddress
+);
+
+// 3rd try
+console.log(chalk.blueBright("Timestamp : " + Date(Date.now()).toString()));
+jamesCoin.randomPayment();
+let tempAmount = randomNum(1, 100);
+jamesCoin.createTransaction(
+  new Transaction(
+    Date.now(),
+    jamesCoin.whoPay.payer,
+    jamesCoin.whoPay.payee,
+    tempAmount
+  )
+);
+console.log(
+  chalk.cyan(
+    `${jamesCoin.getPayer()} paid for ${jamesCoin.getPayee()} amount: `
+  ) +
+    chalk.magenta(tempAmount) +
+    chalk.yellow(' JAMESCOIN💰"')
+);
+console.log("\nThe block is mining...");
+jamesCoin.mineCurrentBlock("wallet-Miner69er");
+
+showStatements();
+
+// console.log("\nBalance: James: " + jamesCoin.getAddressBalance("wallet-James"));
+// console.log("\nBalance: Nora: " + jamesCoin.getAddressBalance("wallet-Nora"));
+// console.log(
+//   "\nBalance: Miner69er: " + jamesCoin.getAddressBalance("wallet-Miner69er")
+// );
+console.log(
+  chalk.gray.dim("Unmined Transactions: " + jamesCoin.unminedTxns.length)
+);
+
+// Attemp Loops
+for (let i = 0; i < 1000; i++) {
+  console.log(chalk.blueBright("Timestamp : " + Date(Date.now()).toString()));
+  jamesCoin.randomPayment();
+  let tempAmount = randomNum(1, 100);
+  jamesCoin.createTransaction(
+    new Transaction(
+      Date.now(),
+      jamesCoin.whoPay.payer,
+      jamesCoin.whoPay.payee,
+      tempAmount
+    )
+  );
+  console.log(
+    chalk.cyan(
+      `${jamesCoin.getPayer()} paid for ${jamesCoin.getPayee()} amount: `
+    ) +
+      chalk.magenta(tempAmount) +
+      chalk.yellow(' JAMESCOIN💰"')
+  );
+  console.log("\nThe block is mining...");
+  jamesCoin.mineCurrentBlock("wallet-Miner69er");
+
+  showStatements();
+
+  // console.log("\nBalance: James: " + jamesCoin.getAddressBalance("wallet-James"));
+  // console.log("\nBalance: Nora: " + jamesCoin.getAddressBalance("wallet-Nora"));
+  // console.log(
+  //   "\nBalance: Miner69er: " + jamesCoin.getAddressBalance("wallet-Miner69er")
+  // );
+  console.log(
+    chalk.gray.dim("Unmined Transactions: " + jamesCoin.unminedTxns.length)
+  );
+}
 // let demoChain = new BlockChain();
 // console.log("Starting to mine a new block...");
 // demoChain.addBlock(
